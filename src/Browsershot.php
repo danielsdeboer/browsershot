@@ -575,6 +575,10 @@ class Browsershot
         throw new ProcessFailedException($process);
     }
 
+    /**
+     * @param string $string
+     * @return mixed
+     */
     private function tripleQuote (string $string)
     {
         return str_replace('"', '"""', $string);
