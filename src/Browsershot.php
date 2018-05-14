@@ -317,7 +317,7 @@ class Browsershot
         return $this;
     }
 
-    public function emulateMedia(?string $media)
+    public function emulateMedia(string $media = null)
     {
         $this->setOption('emulateMedia', $media);
 
@@ -543,12 +543,22 @@ class Browsershot
 
         $binPath = $this->binPath ?: __DIR__.'/../bin/browser.js';
 
-        $fullCommand =
-            $setIncludePathCommand.' '
-            .$setNodePathCommand.' '
-            .$nodeBinary.' '
-            .escapeshellarg($binPath).' '
-            .escapeshellarg(json_encode($command));
+        if (PHP_OS === 'WINNT') {
+            $fullCommand = $this->join(
+                $nodeBinary,
+                $binPath,
+                $this->tripleQuote(
+                    json_encode($command)
+                )
+            );
+        } else {
+            $fullCommand =
+                $setIncludePathCommand.' '
+                .$setNodePathCommand.' '
+                .$nodeBinary.' '
+                .escapeshellarg($binPath).' '
+                .escapeshellarg(json_encode($command));
+        }
 
         $process = (new Process($fullCommand))->setTimeout($this->timeout);
 
@@ -563,6 +573,20 @@ class Browsershot
         }
 
         throw new ProcessFailedException($process);
+    }
+
+    private function tripleQuote (string $string)
+    {
+        return str_replace('"', '"""', $string);
+    }
+
+    /**
+     * @param mixed ...$items
+     * @return string
+     */
+    private function join (...$items)
+    {
+        return implode(' ', $items);
     }
 
     protected function getNodePathCommand(string $nodeBinary): string
